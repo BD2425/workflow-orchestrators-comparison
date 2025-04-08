@@ -1,0 +1,70 @@
+<configuration>
+    <!-- Dirección del ResourceManager -->
+    <property>
+        <name>yarn.resourcemanager.hostname</name>
+        <value>resourcemanager</value>
+    </property>
+
+    <!-- Puerto de comunicación del ResourceManager -->
+    <property>
+        <name>yarn.resourcemanager.address</name>
+        <value>resourcemanager:8032</value>
+    </property>
+
+    <property>
+        <name>yarn.resourcemanager.scheduler.address</name>
+        <value>resourcemanager:8030</value>
+    </property>
+
+    <property>
+        <name>yarn.resourcemanager.resource-tracker.address</name>
+        <value>resourcemanager:8031</value>
+    </property>
+
+    <property>
+        <name>yarn.resourcemanager.admin.address</name>
+        <value>resourcemanager:8033</value>
+    </property>
+
+    <!-- UI Web de YARN -->
+    <property>
+        <name>yarn.resourcemanager.webapp.address</name>
+        <value>resourcemanager:8088</value>
+    </property>
+
+    <!-- Nodos trabajadores del cluster -->
+    <property>
+        <name>yarn.nodemanager.aux-services</name>
+        <value>mapreduce_shuffle</value>
+    </property>
+
+    <property>
+        <name>yarn.nodemanager.aux-services.mapreduce_shuffle.class</name>
+        <value>org.apache.hadoop.mapred.ShuffleHandler</value>
+    </property>
+
+    <!-- Configuración de memoria del NodeManager -->
+    <property>
+        <name>yarn.nodemanager.resource.memory-mb</name>
+        <value>2048</value>
+    </property>
+
+    <!-- Número máximo de CPU cores que puede usar cada NodeManager -->
+    <property>
+        <name>yarn.nodemanager.resource.cpu-vcores</name>
+        <value>2</value>
+    </property>
+
+    <!-- Permitir sobreescribir configuraciones -->
+    <property>
+        <name>yarn.nodemanager.vmem-check-enabled</name>
+        <value>false</value>
+    </property>
+
+    <!-- Modo de programación de YARN (FIFO, Capacity o Fair) -->
+    <property>
+        <name>yarn.scheduler.capacity.maximum-am-resource-percent</name>
+        <value>0.5</value>
+    </property>
+
+</configuration>

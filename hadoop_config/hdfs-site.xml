@@ -1,0 +1,48 @@
+<configuration>
+    <!-- Configuración del directorio de almacenamiento de datos para NameNode -->
+    <property>
+        <name>dfs.namenode.name.dir</name>
+        <value>file:///opt/hadoop/data/nameNode</value>
+    </property>
+
+    <!-- Configuración del directorio de almacenamiento de datos para DataNodes -->
+    <property>
+        <name>dfs.datanode.data.dir</name>
+        <value>file:///opt/hadoop/data/dataNode</value>
+    </property>
+
+    <!-- Factor de replicación de los bloques (ajústalo según el número de DataNodes) -->
+    <property>
+        <name>dfs.replication</name>
+        <value>2</value>
+    </property>
+
+    <property>
+        <name>dfs.namenode.rpc-address</name>
+        <value>namenode:9000</value>
+    </property>
+
+    <property>
+        <name>dfs.namenode.http-address</name>
+        <value>0.0.0.0:9870</value>
+    </property>
+
+
+    <!-- Permitir sobreescribir bloques corruptos -->
+    <property>
+        <name>dfs.client.block.write.replace-datanode-on-failure.policy</name>
+        <value>ALWAYS</value>
+    </property>
+
+    <!-- Seguridad deshabilitada para entorno de pruebas -->
+    <property>
+        <name>dfs.permissions</name>
+        <value>false</value>
+    </property>
+
+    <property>
+    <name>dfs.namenode.safemode.extension</name>
+    <value>0</value>
+    </property>
+
+</configuration>

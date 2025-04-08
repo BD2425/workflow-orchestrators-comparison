@@ -1,0 +1,39 @@
+<?xml version="1.0"?>
+<configuration>
+
+    <!-- Definir el sistema de archivos predeterminado como HDFS -->
+    <property>
+        <name>fs.defaultFS</name>
+        <value>hdfs://namenode:9000</value>
+    </property>
+
+    <!-- Directorio temporal para HDFS -->
+    <property>
+        <name>hadoop.tmp.dir</name>
+        <value>/opt/hadoop/tmp</value>
+    </property>
+
+    <!-- Deshabilitar permisos en HDFS para evitar errores en desarrollo -->
+    <property>
+        <name>dfs.permissions.enabled</name>
+        <value>false</value>
+    </property>
+
+    <!-- Configurar el tamaño del bloque en HDFS -->
+    <property>
+        <name>dfs.blocksize</name>
+        <value>128m</value>
+    </property>
+
+    <!-- Configuración de proxy para permitir que Hive acceda a HDFS sin errores de permisos -->
+    <property>
+        <name>hadoop.proxyuser.hive.hosts</name>
+        <value>*</value>
+    </property>
+
+    <property>
+        <name>hadoop.proxyuser.hive.groups</name>
+        <value>*</value>
+    </property>
+
+</configuration>

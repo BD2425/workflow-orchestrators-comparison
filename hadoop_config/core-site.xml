@@ -1,0 +1,31 @@
+<configuration>
+    <!-- Dirección del NameNode -->
+    <property>
+        <name>fs.defaultFS</name>
+        <value>hdfs://namenode:9000</value>
+    </property>
+
+    <!-- Habilitar soporte para IPv4 e IPv6 -->
+    <property>
+        <name>hadoop.security.token.service.use_ip</name>
+        <value>false</value>
+    </property>
+
+    <!-- Ubicación del almacén temporal de Hadoop -->
+    <property>
+        <name>hadoop.tmp.dir</name>
+        <value>/opt/hadoop/tmp</value>
+    </property>
+
+    <!-- Tiempo de espera para RPCs de HDFS -->
+    <property>
+        <name>ipc.client.connect.timeout</name>
+        <value>30000</value>
+    </property>
+
+    <!-- Seguridad deshabilitada para un entorno de pruebas -->
+    <property>
+        <name>hadoop.security.authentication</name>
+        <value>simple</value>
+    </property>
+</configuration>

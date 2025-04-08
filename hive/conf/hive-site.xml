@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+
+    <!-- Configuración general -->
+    <property>
+        <name>hive.server2.enable.doAs</name>
+        <value>false</value>
+    </property>
+    <property>
+        <name>hive.exec.scratchdir</name>
+        <value>/opt/hive/scratch_dir</value>
+    </property>
+    <property>
+        <name>hive.user.install.directory</name>
+        <value>/opt/hive/install_dir</value>
+    </property>
+    <property>
+        <name>hive.exec.submit.local.task.via.child</name>
+        <value>false</value>
+    </property>
+    <property>
+        <name>hive.compactor.worker.threads</name>
+        <value>1</value>
+    </property>
+
+    <!-- Configuración del metastore con MySQL -->
+    <property>
+        <name>javax.jdo.option.ConnectionURL</name>
+        <value>jdbc:mysql://mysql:3306/metastore_db?useSSL=false&amp;allowPublicKeyRetrieval=true&amp;serverTimezone=UTC</value>
+    </property>
+
+    <property>
+        <name>javax.jdo.option.ConnectionDriverName</name>
+        <value>com.mysql.cj.jdbc.Driver</value>
+    </property>
+    <property>
+        <name>javax.jdo.option.ConnectionUserName</name>
+        <value>hive</value>
+    </property>
+    <property>
+        <name>javax.jdo.option.ConnectionPassword</name>
+        <value>password</value>
+    </property>
+    <property>
+        <name>hive.metastore.uris</name>
+        <value>thrift://metastore:9083</value>
+    </property>
+
+    <!-- Configuración del metastore -->
+    <property>
+        <name>metastore.metastore.event.db.notification.api.auth</name>
+        <value>false</value>
+    </property>
+
+    <!-- ✅ Configuración para usar HDFS -->
+    <property>
+        <name>hive.metastore.warehouse.dir</name>
+        <value>hdfs://namenode:9000/user/hive/warehouse</value>
+    </property>
+    <property>
+        <name>fs.defaultFS</name>
+        <value>hdfs://namenode:9000</value>
+    </property>
+
+    <!-- Configuración del motor de ejecución en Hadoop -->
+    <property>
+        <name>hive.execution.engine</name>
+        <value>mr</value>
+    </property>
+
+    <!-- Configuración del puerto de HiveServer2 -->
+    <property>
+        <name>hive.server2.thrift.port</name>
+        <value>10000</value>
+    </property>
+    <property>
+        <name>hive.server2.authentication</name>
+        <value>NONE</value>
+    </property>
+
+    <!-- Configuración de almacenamiento en Parquet -->
+    <property>
+        <name>hive.default.fileformat</name>
+        <value>Parquet</value>
+    </property>
+    <property>
+        <name>hive.exec.dynamic.partition.mode</name>
+        <value>nonstrict</value>
+    </property>
+    <property>
+        <name>hive.exec.max.dynamic.partitions</name>
+        <value>1000</value>
+    </property>
+    <property>
+        <name>hive.exec.max.dynamic.partitions.pernode</name>
+        <value>1000</value>
+    </property>
+    <property>
+        <name>hive.default.fileformat.managed</name>
+        <value>Parquet</value>
+    </property>
+    <property>
+        <name>hive.exec.compress.output</name>
+        <value>true</value>
+    </property>
+    <property>
+        <name>parquet.compression</name>
+        <value>SNAPPY</value>
+    </property>
+
+</configuration>
