@@ -5,6 +5,8 @@ networks:
 volumes:
   warehouse:
   mysql-db:
+  dagster-postgres:
+    driver: local
 
 services:
   # Nodo Maestro de HDFS
@@ -284,3 +286,36 @@ services:
       - "8081:8080"  # UI de Airflow
     networks:
       - airflow_network
+
+  dagster-dagit:
+    build:
+      context: .
+      dockerfile: Dockerfile.dagster
+    volumes:
+      - ./dagster:/opt/dagster/app
+    ports:
+      - 3000:3000
+    depends_on:
+      - dagster-postgres
+
+  dagster-daemon:
+    build:
+      context: .
+      dockerfile: Dockerfile.dagster
+    volumes:
+      - ./dagster:/opt/dagster/app
+    command: ["dagster-daemon", "run", "-w", "/opt/dagster/dagster_home/workspace.yaml"]
+    environment:
+      - PGPASS=${PGPASS}
+      - PGUID=${PGUID}
+    depends_on:
+      - dagster-postgres
+
+  dagster-postgres:
+    image: postgres:13.3
+    ports:
+      - 5432:5432
+    environment:
+      - POSTGRES_PASSWORD=${PGPASS}
+    volumes:
+      - dagster-postgres:/var/lib/postgresql/data

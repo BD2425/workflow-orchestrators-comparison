@@ -4,3 +4,4 @@ hadoop_namenode
 hive/conf/hiveserver2.pid
 __pycache__/
 airflow/logs/
+.env
