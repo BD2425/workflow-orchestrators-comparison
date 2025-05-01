@@ -287,6 +287,7 @@ services:
     networks:
       - airflow_network
 
+  # Dagster
   dagster-dagit:
     build:
       context: .
@@ -319,3 +320,20 @@ services:
       - POSTGRES_PASSWORD=${PGPASS}
     volumes:
       - dagster-postgres:/var/lib/postgresql/data
+
+  # Luigi
+  luigi:
+    build:
+      context: .
+      dockerfile: Dockerfile.luigi
+    container_name: luigi
+    hostname: luigi
+    ports:
+      - "8082:8082"
+    volumes:
+      - ./luigi:/opt/luigi
+    environment:
+      - LUIGI_CONFIG_PATH=/opt/luigi/luigi.cfg
+    command: luigid --pidfile /opt/luigi/luigid.pid --logdir /opt/luigi/logs --state-path /opt/luigi/state
+    networks:
+      - airflow_network
