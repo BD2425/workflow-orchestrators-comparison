@@ -5,6 +5,8 @@ networks:
 volumes:
   warehouse:
   mysql-db:
+  dagster-postgres:
+    driver: local
 
 services:
   # Nodo Maestro de HDFS
@@ -282,5 +284,56 @@ services:
       airflow scheduler & airflow webserver --port 8080"
     ports:
       - "8081:8080"  # UI de Airflow
+    networks:
+      - airflow_network
+
+  # Dagster
+  dagster-dagit:
+    build:
+      context: .
+      dockerfile: Dockerfile.dagster
+    volumes:
+      - ./dagster:/opt/dagster/app
+    ports:
+      - 3000:3000
+    depends_on:
+      - dagster-postgres
+
+  dagster-daemon:
+    build:
+      context: .
+      dockerfile: Dockerfile.dagster
+    volumes:
+      - ./dagster:/opt/dagster/app
+    command: ["dagster-daemon", "run", "-w", "/opt/dagster/dagster_home/workspace.yaml"]
+    environment:
+      - PGPASS=${PGPASS}
+      - PGUID=${PGUID}
+    depends_on:
+      - dagster-postgres
+
+  dagster-postgres:
+    image: postgres:13.3
+    ports:
+      - 5432:5432
+    environment:
+      - POSTGRES_PASSWORD=${PGPASS}
+    volumes:
+      - dagster-postgres:/var/lib/postgresql/data
+
+  # Luigi
+  luigi:
+    build:
+      context: .
+      dockerfile: Dockerfile.luigi
+    container_name: luigi
+    hostname: luigi
+    ports:
+      - "8082:8082"
+    volumes:
+      - ./luigi:/opt/luigi
+    environment:
+      - LUIGI_CONFIG_PATH=/opt/luigi/luigi.cfg
+    command: luigid --pidfile /opt/luigi/luigid.pid --logdir /opt/luigi/logs --state-path /opt/luigi/state
     networks:
       - airflow_network
