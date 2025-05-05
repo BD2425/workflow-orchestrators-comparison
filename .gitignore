@@ -13,4 +13,5 @@ luigi/logs/
 luigi/hello_world.txt
 luigi/luigid.pid
 luigi/luigi.db
+luigi/state
 .env

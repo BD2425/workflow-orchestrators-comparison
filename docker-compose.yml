@@ -267,6 +267,8 @@ services:
     container_name: airflow
     hostname: airflow
     user: root
+    env_file:
+      - .env
     environment:
       - AIRFLOW__CORE__EXECUTOR=SequentialExecutor  # SQLite solo soporta SequentialExecutor
       - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=sqlite:////opt/airflow/airflow.db
