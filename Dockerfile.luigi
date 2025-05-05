@@ -1,0 +1,13 @@
+FROM python:3.10-slim
+
+RUN pip install --no-cache-dir \
+    luigi[hadoop,kafka,mysql] \
+    'sqlalchemy<2.0'
+
+
+RUN mkdir -p /opt/luigi/logs /opt/luigi/state
+
+WORKDIR /opt/luigi
+COPY ./luigi /opt/luigi
+
+CMD ["luigid"]

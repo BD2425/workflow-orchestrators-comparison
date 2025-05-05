@@ -5,3 +5,12 @@ hive/conf/hiveserver2.pid
 __pycache__/
 airflow/logs/
 airflow/data/*
+airflow/airflow.db
+airflow/airflow-webserver.pid
+dagster_home/logs
+dagster_home/.logs_queue
+luigi/logs/
+luigi/hello_world.txt
+luigi/luigid.pid
+luigi/luigi.db
+.env
