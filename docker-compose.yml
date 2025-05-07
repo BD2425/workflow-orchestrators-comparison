@@ -300,6 +300,10 @@ services:
       - 3000:3000
     depends_on:
       - dagster-postgres
+    env_file:
+      - .env
+    networks:
+      - airflow_network
 
   dagster-daemon:
     build:
@@ -313,6 +317,10 @@ services:
       - PGUID=${PGUID}
     depends_on:
       - dagster-postgres
+    env_file:
+      - .env
+    networks:
+      - airflow_network
 
   dagster-postgres:
     image: postgres:13.3
@@ -322,6 +330,8 @@ services:
       - POSTGRES_PASSWORD=${PGPASS}
     volumes:
       - dagster-postgres:/var/lib/postgresql/data
+    networks:
+      - airflow_network
 
   # Luigi
   luigi:

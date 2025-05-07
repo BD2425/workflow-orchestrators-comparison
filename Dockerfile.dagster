@@ -3,7 +3,26 @@ FROM python:3.10-slim
 WORKDIR /opt/dagster
 ENV DAGSTER_HOME=/opt/dagster/dagster_home
 
-RUN pip install dagster dagster-webserver dagit dagster-postgres
+RUN apt-get update && apt-get install -y \
+    gcc \
+    build-essential \
+    default-libmysqlclient-dev \
+    libsasl2-dev \
+    libldap2-dev \
+    libssl-dev \
+    python3-dev \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN pip install --no-cache-dir \
+    dagster \
+    dagster-webserver \
+    dagster-postgres \
+    pyhive[hive] \
+    hdfs \
+    confluent-kafka \
+    pandas \
+    requests
 
 COPY dagster_home/ /opt/dagster/dagster_home
 COPY dagster/ /opt/dagster/app
