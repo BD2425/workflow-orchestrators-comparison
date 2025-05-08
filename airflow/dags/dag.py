@@ -92,7 +92,7 @@ def clean_data_in_hive():
         WHERE passenger_count > 0
     """
     hive_hook.run(clean_query)
-    logging.info("Datos limpios guardados en Hive")
+    logging.info("Cleaned data saved in Hive")
 
 clean_data_hive = PythonOperator(
     task_id='clean_data_hive',
@@ -100,7 +100,37 @@ clean_data_hive = PythonOperator(
     dag=dag
 )
 
-# Paso 4: Publicar evento en Kafka
+# Paso 4: Consultas en Hive
+def run_hive_queries():
+    hive_hook = HiveServer2Hook(hiveserver2_conn_id='hive_default')
+
+    query_1 = """
+        SELECT payment_type, COUNT(*) AS num_trips
+        FROM nyc_taxi_clean
+        GROUP BY payment_type
+        ORDER BY num_trips DESC;
+    """
+    result_1 = hive_hook.get_records(query_1)
+    logging.info(f"Query 1 (trips by payment type): {result_1}")
+
+    query_2 = """
+        SELECT TO_DATE(tpep_pickup_datetime) AS trip_date, COUNT(*) AS num_trips
+        FROM nyc_taxi_clean
+        GROUP BY TO_DATE(tpep_pickup_datetime)
+        ORDER BY trip_date;
+    """
+    result_2 = hive_hook.get_records(query_2)
+    logging.info(f"Query 2 (trips by day): {result_2}")
+
+    return result_1, result_2
+
+run_hive_queries_task = PythonOperator(
+    task_id='run_hive_queries',
+    python_callable=run_hive_queries,
+    dag=dag
+)
+
+# Paso 5: Publicar evento en Kafka
 def generate_etl_message():
     payload = json.dumps({
         "status": "done",
@@ -117,15 +147,34 @@ publish_kafka_event = ProduceToTopicOperator(
     dag=dag
 )
 
-# Paso 5: Notificación por correo
+# Paso 6: Notificación por correo
+def generate_email_content(ti):
+    # Obtener resultados de las consultas anteriores
+    result_1, result_2 = ti.xcom_pull(task_ids='run_hive_queries')
+
+    # Crear el contenido del email
+    content = f"""
+    <p>The ETL process has completed successfully. Below are the results from the Hive queries:</p>
+    <h3>Query 1: Number of trips by payment type</h3>
+    <ul>
+        {''.join([f"<li>Payment Type: {item[0]}, Number of Trips: {item[1]}</li>" for item in result_1])}
+    </ul>
+    <h3>Query 2: Number of trips by day</h3>
+    <ul>
+        {''.join([f"<li>Date: {item[0]}, Number of Trips: {item[1]}</li>" for item in result_2])}
+    </ul>
+    """
+
+    return content
+
 email_notify = EmailOperator(
     task_id='email_notify',
     to=Variable.get("email_recipient"),
-    subject='[Airflow] ETL completada',
-    html_content=f'<p>El ETL ha terminado correctamente. Archivo cargado en <code>{HDFS_PATH}</code>.</p>',
+    subject='[Airflow] ETL completed',
+    html_content="{{ task_instance.xcom_pull(task_ids='generate_email_content') }}",
     dag=dag
 )
 
 # Dependencias del DAG
-upload_to_hdfs_task >> create_hive_table_task >> clean_data_hive >> publish_kafka_event >> email_notify
+upload_to_hdfs_task >> create_hive_table_task >> clean_data_hive >> run_hive_queries_task >> publish_kafka_event >> email_notify
 
