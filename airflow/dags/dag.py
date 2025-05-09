@@ -47,6 +47,11 @@ upload_to_hdfs_task = PythonOperator(
 # Paso 2: Crear tabla externa en Hive
 def create_hive_table():
     hive_hook = HiveServer2Hook(hiveserver2_conn_id='hive_default')
+
+    drop_table_query = "DROP TABLE IF EXISTS nyc_taxi_raw"
+    hive_hook.run(drop_table_query)
+    logging.info("Dropped existing Hive table nyc_taxi_raw if it existed.")
+
     create_table_query = f"""
         CREATE EXTERNAL TABLE IF NOT EXISTS nyc_taxi_raw (
             VendorID INT,
@@ -86,6 +91,11 @@ create_hive_table_task = PythonOperator(
 # Paso 3: Limpiar los datos
 def clean_data_in_hive():
     hive_hook = HiveServer2Hook(hiveserver2_conn_id='hive_default')
+
+    drop_table_query = "DROP TABLE IF EXISTS nyc_taxi_clean"
+    hive_hook.run(drop_table_query)
+    logging.info("Dropped existing Hive table nyc_taxi_clean if it existed.")
+
     clean_query = """
         CREATE TABLE IF NOT EXISTS nyc_taxi_clean AS
         SELECT * FROM nyc_taxi_raw
@@ -108,7 +118,7 @@ def run_hive_queries():
         SELECT payment_type, COUNT(*) AS num_trips
         FROM nyc_taxi_clean
         GROUP BY payment_type
-        ORDER BY num_trips DESC;
+        ORDER BY num_trips DESC
     """
     result_1 = hive_hook.get_records(query_1)
     logging.info(f"Query 1 (trips by payment type): {result_1}")
@@ -117,7 +127,7 @@ def run_hive_queries():
         SELECT TO_DATE(tpep_pickup_datetime) AS trip_date, COUNT(*) AS num_trips
         FROM nyc_taxi_clean
         GROUP BY TO_DATE(tpep_pickup_datetime)
-        ORDER BY trip_date;
+        ORDER BY trip_date
     """
     result_2 = hive_hook.get_records(query_2)
     logging.info(f"Query 2 (trips by day): {result_2}")

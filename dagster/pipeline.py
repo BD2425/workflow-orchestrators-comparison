@@ -27,6 +27,11 @@ def create_hive_table(previous_step: str):
     logger = get_dagster_logger()
     conn = hive.Connection(host='hiveserver2', port=10000, database='default')
     cursor = conn.cursor()
+
+    drop_table_query = "DROP TABLE IF EXISTS nyc_taxi_raw_dagster"
+    cursor.execute(drop_table_query)
+    logger.info("Dropped existing Hive table nyc_taxi_raw_dagster if it existed.")
+
     query = f"""
         CREATE EXTERNAL TABLE IF NOT EXISTS nyc_taxi_raw_dagster (
             VendorID INT,
@@ -63,6 +68,11 @@ def clean_data_in_hive(previous_step: str):
     logger = get_dagster_logger()
     conn = hive.Connection(host='hiveserver2', port=10000, database='default')
     cursor = conn.cursor()
+
+    drop_table_query = "DROP TABLE IF EXISTS nyc_taxi_clean_dagster"
+    cursor.execute(drop_table_query)
+    logger.info("Dropped existing Hive table nyc_taxi_clean_dagster if it existed.")
+
     query = """
         CREATE TABLE IF NOT EXISTS nyc_taxi_clean_dagster AS
         SELECT * FROM nyc_taxi_raw_dagster
@@ -73,7 +83,35 @@ def clean_data_in_hive(previous_step: str):
     return "data_cleaned"
 
 @op
-def publish_to_kafka(previous_step: str):
+def run_hive_queries(previous_step: str):
+    logger = get_dagster_logger()
+    conn = hive.Connection(host='hiveserver2', port=10000, database='default')
+    cursor = conn.cursor()
+
+    query_1 = """
+        SELECT payment_type, COUNT(*) AS num_trips
+        FROM nyc_taxi_clean_dagster
+        GROUP BY payment_type
+        ORDER BY num_trips DESC
+    """
+    cursor.execute(query_1)
+    result_1 = cursor.fetchall()
+    logger.info(f"Query 1 (trips by payment type): {result_1}")
+
+    query_2 = """
+        SELECT TO_DATE(tpep_pickup_datetime) AS trip_date, COUNT(*) AS num_trips
+        FROM nyc_taxi_clean_dagster
+        GROUP BY TO_DATE(tpep_pickup_datetime)
+        ORDER BY trip_date
+    """
+    cursor.execute(query_2)
+    result_2 = cursor.fetchall()
+    logger.info(f"Query 2 (trips by day): {result_2}")
+
+    return {"by_payment_type": result_1, "by_day": result_2}
+
+@op
+def publish_to_kafka(hive_results: dict):
     logger = get_dagster_logger()
     producer = Producer({'bootstrap.servers': 'kafka:9092'})
     payload = json.dumps({
@@ -87,14 +125,30 @@ def publish_to_kafka(previous_step: str):
     return "published"
 
 @op
-def send_email_notification(previous_step: str):
+def send_email_notification(hive_results: dict, _published: str):
     logger = get_dagster_logger()
     recipient = os.getenv("DAGSTER_EMAIL_TO")
     if not recipient:
         raise ValueError("Missing DAGSTER_EMAIL_TO environment variable")
     
+    result_1 = hive_results["by_payment_type"]
+    result_2 = hive_results["by_day"]
+
+    content = f"""
+    <p>The ETL process has completed successfully. Below are the results from the Hive queries:</p>
+    <h3>Query 1: Number of trips by payment type</h3>
+    <ul>
+        {''.join([f"<li>Payment Type: {item[0]}, Number of Trips: {item[1]}</li>" for item in result_1])}
+    </ul>
+    <h3>Query 2: Number of trips by day</h3>
+    <ul>
+        {''.join([f"<li>Date: {item[0]}, Number of Trips: {item[1]}</li>" for item in result_2])}
+    </ul>
+    """
+
     msg = EmailMessage()
-    msg.set_content(f"El ETL ha terminado correctamente. Archivo cargado en {HDFS_PATH}")
+    msg.set_content("HTML not supported", subtype='plain')
+    msg.add_alternative(content, subtype='html')
     msg["Subject"] = "[Dagster] ETL completada"
     msg["From"] = os.getenv("DAGSTER_EMAIL")
     msg["To"] = recipient
@@ -103,12 +157,14 @@ def send_email_notification(previous_step: str):
         smtp.starttls()
         smtp.login(os.getenv("DAGSTER_EMAIL"), os.getenv("DAGSTER_EMAIL_PASSWORD"))
         smtp.send_message(msg)
-    logger.info("Notification email sent.")
+
+    logger.info("Notification email with Hive results sent.")
 
 @job
 def etl_nyc_taxi_hdfs_hive():
     uploaded = upload_to_hdfs()
     table = create_hive_table(uploaded)
     cleaned = clean_data_in_hive(table)
-    published = publish_to_kafka(cleaned)
-    send_email_notification(published)
+    hive_results = run_hive_queries(cleaned)
+    published = publish_to_kafka(hive_results)
+    send_email_notification(hive_results, published)
