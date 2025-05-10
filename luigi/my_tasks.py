@@ -5,6 +5,9 @@ from datetime import datetime
 from luigi.contrib.hadoop import HdfsClient
 from luigi.contrib.hive import HiveClient
 from luigi.contrib.kafka import KafkaProducer
+import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 from dotenv import load_dotenv
 import os
 
@@ -143,7 +146,6 @@ class SendEmailNotification(luigi.Task):
             data = json.load(f)
         result_1 = data["query_1"]
         result_2 = data["query_2"]
-
         # Generar contenido del email
         content = f"""
         <p>The ETL process has completed successfully. Below are the results from the Hive queries:</p>
@@ -156,25 +158,18 @@ class SendEmailNotification(luigi.Task):
             {''.join([f"<li>Date: {item[0]}, Number of Trips: {item[1]}</li>" for item in result_2])}
         </ul>
         """
-
-        # Enviar el correo
         self.send_email(
             subject='[Luigi] ETL completed',
-            html_content=content
-        )
-
-        # Marcar tarea como completada
+            html_content=content)
         with self.output().open('w') as f:
             f.write("Email sent.")
 
     def send_email(self, subject, html_content):
         msg = MIMEMultipart('alternative')
-        msg['Subject'] = AIRFLOW__SMTP__SMTP_USER
+        msg['Subject'] = sender
         msg['From'] = sender
         msg['To'] = recipient
-
         msg.attach(MIMEText(html_content, 'html'))
-
         with smtplib.SMTP_SSL('smtp.gmail.com', 465) as server:
             server.login(sender, password)
             server.sendmail(sender, recipient, msg.as_string())
