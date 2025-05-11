@@ -11,6 +11,7 @@ dagster/data/*
 dagster_home/logs
 dagster_home/.logs_queue
 luigi/logs/
+luigi/data/*
 luigi/hello_world.txt
 luigi/luigid.pid
 luigi/luigi.db

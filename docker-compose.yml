@@ -346,6 +346,10 @@ services:
       - ./luigi:/opt/luigi
     environment:
       - LUIGI_CONFIG_PATH=/opt/luigi/luigi.cfg
+    depends_on:
+      - hiveserver2
+    env_file:
+      - .env
     command: luigid --pidfile /opt/luigi/luigid.pid --logdir /opt/luigi/logs --state-path /opt/luigi/state
     networks:
       - airflow_network
