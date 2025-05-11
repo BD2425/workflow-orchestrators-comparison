@@ -267,6 +267,8 @@ services:
     container_name: airflow
     hostname: airflow
     user: root
+    env_file:
+      - .env
     environment:
       - AIRFLOW__CORE__EXECUTOR=SequentialExecutor  # SQLite solo soporta SequentialExecutor
       - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=sqlite:////opt/airflow/airflow.db
@@ -298,6 +300,10 @@ services:
       - 3000:3000
     depends_on:
       - dagster-postgres
+    env_file:
+      - .env
+    networks:
+      - airflow_network
 
   dagster-daemon:
     build:
@@ -311,6 +317,10 @@ services:
       - PGUID=${PGUID}
     depends_on:
       - dagster-postgres
+    env_file:
+      - .env
+    networks:
+      - airflow_network
 
   dagster-postgres:
     image: postgres:13.3
@@ -320,6 +330,8 @@ services:
       - POSTGRES_PASSWORD=${PGPASS}
     volumes:
       - dagster-postgres:/var/lib/postgresql/data
+    networks:
+      - airflow_network
 
   # Luigi
   luigi:
@@ -334,6 +346,10 @@ services:
       - ./luigi:/opt/luigi
     environment:
       - LUIGI_CONFIG_PATH=/opt/luigi/luigi.cfg
+    depends_on:
+      - hiveserver2
+    env_file:
+      - .env
     command: luigid --pidfile /opt/luigi/luigid.pid --logdir /opt/luigi/logs --state-path /opt/luigi/state
     networks:
       - airflow_network
